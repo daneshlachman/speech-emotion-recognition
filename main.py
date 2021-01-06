@@ -1,11 +1,10 @@
 import librosa
 import soundfile
-import os, glob, pickle
+import os, glob
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
-import pdb
 
 # path to audio files 
 path_to_audio_files = "speech-emotion-recognition-ravdess-data"
@@ -21,19 +20,18 @@ def extract_feature(file_name, mfcc, chroma, mel):
         stft = np.abs(librosa.stft(opened_soundfile))
         result = np.array([])   
         
-        
         # Mel-frequency cepstral coefficients (MFCCs) 
         mfccs = np.mean(librosa.feature.mfcc(y=opened_soundfile, sr=sample_rate, n_mfcc=40).T, axis=0)
         result = np.hstack((result, mfccs))
-        pdb.set_trace()
+
         # Compute a chromagram from a waveform or power spectrogram.
         chroma = np.mean(librosa.feature.chroma_stft(S=stft, sr=sample_rate).T,axis=0)
         result = np.hstack((result, chroma))
-        pdb.set_trace()
+        
         # Compute a mel-scaled spectrogram.
         mel = np.mean(librosa.feature.melspectrogram(opened_soundfile, sr=sample_rate).T,axis=0)
         result = np.hstack((result, mel))
-        pdb.set_trace()
+        
     return result
 
 
@@ -66,7 +64,24 @@ emotions={
 # the to be observed emotions
 observed_emotions = ['calm', 'happy', 'fearful', 'disgust']
 
-#Split the dataset
+#Split the dataset, and print some information about the data
 x_train,x_test,y_train,y_test=load_data(test_size=0.25)
 print((x_train.shape[0], x_test.shape[0]))
 print(f'Features extracted: {x_train.shape[1]}')
+
+#Initialize a Multi Layer Perceptron Classifier
+model = MLPClassifier(activation="relu", early_stopping=False, shuffle=True,  alpha=0.01, batch_size=256, epsilon=1e-08, hidden_layer_sizes=(300,), learning_rate='adaptive', max_iter=500)
+
+#train the model
+model.fit(x_train,y_train)
+
+MLPClassifier()
+
+#predict for the test set
+y_predict = model.predict(x_test)
+
+#calculate the accuracy of our model
+accuracy = accuracy_score(y_true=y_test, y_pred=y_predict)
+
+#print the accuracy
+print("Accuracy: {:.2f}%".format(accuracy*100))
