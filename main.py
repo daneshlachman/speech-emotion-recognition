@@ -5,9 +5,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
+import pdb 
 
-# path to audio files 
+# path to audio files & prediction testfile
 path_to_audio_files = "speech-emotion-recognition-ravdess-data"
+prediction_file = "my_dad_pretending_to_be_sad.wav"
 
 # do audio processing so that features (mfcc, chroma, mel) are extracted
 #  from the sound file, and then process them into result
@@ -49,6 +51,12 @@ def load_data(test_size=0.2):
         y.append(emotion)
     return train_test_split(np.array(x), y, test_size=test_size, random_state=9)
 
+def make_prediction(file_name):
+    sample_feature = extract_feature(file_name, mfcc=True, chroma=True, mel=True)
+    reshaped_sample_feature = sample_feature.reshape(1,-1)
+    prediction = model.predict(reshaped_sample_feature)
+    return prediction
+
 #emotions in the RAVDESS dataset
 emotions={
   '01':'neutral',
@@ -66,7 +74,6 @@ observed_emotions = ['calm', 'happy', 'fearful', 'disgust']
 
 #Split the dataset, and print some information about the data
 x_train,x_test,y_train,y_test=load_data(test_size=0.25)
-print((x_train.shape[0], x_test.shape[0]))
 print(f'Features extracted: {x_train.shape[1]}')
 
 #Initialize a Multi Layer Perceptron Classifier
@@ -75,13 +82,12 @@ model = MLPClassifier(activation="relu", early_stopping=False, shuffle=True,  al
 #train the model
 model.fit(x_train,y_train)
 
-MLPClassifier()
-
 #predict for the test set
 y_predict = model.predict(x_test)
 
-#calculate the accuracy of our model
+#calculate & print the accuracy of our model
 accuracy = accuracy_score(y_true=y_test, y_pred=y_predict)
+print("The accuracy of the model is: {:.2f}%".format(accuracy*100))
+print("The predicted emotion for the given sample file is: " + make_prediction(prediction_file)[0])
 
-#print the accuracy
-print("Accuracy: {:.2f}%".format(accuracy*100))
+
